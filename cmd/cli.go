@@ -660,6 +660,410 @@ func StartCLI(host string, port int, username, password, certFile, keyFile strin
 			fmt.Println("alloc:", alloc)
 			fmt.Println("total:", total)
 			fmt.Println("sys:", sys)
+		case "setpassword":
+			if len(args) != 1 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			password := args[0]
+			_, err = Command("setpassword", map[string]interface{}{"password": password}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "reauthenticate":
+			_, err = Command("reauthenticate", map[string]interface{}{}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "setexpirationtime":
+			if len(args) != 1 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			sessionExpiration, err := time.ParseDuration(args[0])
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			_, err = Command("setexpirationtime", map[string]interface{}{"sessionExpiration": sessionExpiration}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "createdirs":
+			if len(args) < 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			paths := args[1:]
+			_, err = Command("createdirs", map[string]interface{}{"drive": drive, "paths": paths}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "createdirtree":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			parent := args[1]
+			paths := args[2:]
+			_, err = Command("createdirtree", map[string]interface{}{"drive": drive, "parent": parent, "paths": paths}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "listdir", "dir", "ls":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			resp, err := Command("listdir", map[string]interface{}{"drive": drive, "path": path}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			info, err := getSlice(resp.Data, "list")
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			for i := range info {
+				fmt.Println(info[i].(map[string]interface{})["name"])
+			}
+		case "renamedir":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			newName := args[2]
+			_, err = Command("renamedirs", map[string]interface{}{"drive": drive, "paths": []string{path}, "newNames": []string{newName}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "movedir":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			dest := args[2]
+			_, err = Command("movedirs", map[string]interface{}{"drive": drive, "paths": []string{path}, "dests": []string{dest}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "deletedir":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			_, err = Command("deletedirs", map[string]interface{}{"drive": drive, "paths": []string{path}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "createfiles":
+			if len(args) < 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			paths := args[1:]
+			_, err = Command("createfiles", map[string]interface{}{"drive": drive, "paths": paths}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "upload":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			uploadPath := args[2]
+			resp, err := c.UploadFiles(auth, []string{path}, []string{uploadPath}, nil, drive, 4086, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			if resp.Code != 0 {
+				fmt.Println("failed: error code", resp.Code, resp.String)
+			}
+		case "download":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			downloadPath := args[2]
+			resp, err := c.DownloadFiles(auth, []string{path}, []string{downloadPath}, drive, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			if resp.Code != 0 {
+				fmt.Println("failed: error code", resp.Code, resp.String)
+			}
+		case "renamefile":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			newName := args[2]
+			_, err = Command("renamefiles", map[string]interface{}{"drive": drive, "paths": []string{path}, "newName": []string{newName}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "movefile":
+			if len(args) != 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			dest := args[2]
+			_, err = Command("movefiles", map[string]interface{}{"drive": drive, "paths": []string{path}, "dests": []string{dest}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "deletefile":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			_, err = Command("deletefiles", map[string]interface{}{"drive": drive, "paths": []string{path}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "stat":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			resp, err := Command("stat", map[string]interface{}{"drive": drive, "paths": []string{path}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			info, err := getMapStringInterface(resp.Data, "stat")
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			for i := range info {
+				fmt.Println(info[i].(map[string]interface{})["name"])
+				fmt.Println("	exists:", info[i].(map[string]interface{})["exists"])
+				if info[i].(map[string]interface{})["exists"].(bool) {
+					fmt.Println("	is file:", info[i].(map[string]interface{})["isfile"])
+					fmt.Println("	last edit time:", time.Unix(info[i].(map[string]interface{})["lastedittime"].(int64), 0))
+					fmt.Println("	last editor:", info[i].(map[string]interface{})["lasteditor"])
+				}
+			}
+		case "rehash":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			_, err = Command("rehashfiles", map[string]interface{}{"drive": drive, "paths": []string{path}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "verify":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			resp, err := Command("verifyhashes", map[string]interface{}{"drive": drive, "paths": []string{path}}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			info, err := getMapStringInterface(resp.Data, "results")
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			for i := range info {
+				fmt.Println(info[i])
+			}
+		case "getpathsettings":
+			if len(args) != 2 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			resp, err := Command("getpathsettings", map[string]interface{}{"drive": drive, "path": path}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			info, err := getMapStringInterface(resp.Data, "settings")
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			fmt.Println("access clearance:", info["accessclearance"])
+			fmt.Println("modify clearance:", info["modifyclearance"])
+			fmt.Println("access whitelist:", info["accesswhitelist"])
+			fmt.Println("modify whitelist:", info["modifywhitelist"])
+			fmt.Println("access blacklist:", info["accessblacklist"])
+			fmt.Println("modify blacklist:", info["modifyblacklist"])
+		case "setpathclearances":
+			if len(args) != 4 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			ac, err := strconv.Atoi(args[2])
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			mc, err := strconv.Atoi(args[3])
+			if err != nil {
+				fmt.Println("lily-cli:", err.Error())
+				continue
+			}
+			_, err = Command("setpathclearances", map[string]interface{}{"drive": drive, "path": path, "access": ac, "modify": mc}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "addtopathaccesswhitelist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("addtopathaccesswhitelist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "removefrompathaccesswhitelist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("removefrompathaccesswhitelist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "addtopathmodifywhitelist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("addtopathmodifywhitelist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "removefrompathmodifywhitelist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("removefrompathmodifywhitelist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "addtopathaccessblacklist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("addtopathaccessblacklist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "removefrompathaccessblacklist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("removefrompathaccessblacklist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "addtopathmodifyblacklist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("addtopathmodifyblacklist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+		case "removefrompathmodifyblacklist":
+			if len(args) < 3 {
+				fmt.Println("invalid number of arguments")
+				continue
+			}
+			drive := args[0]
+			path := args[1]
+			names := args[2:]
+			_, err = Command("removefrompathmodifyblacklist", map[string]interface{}{"drive": drive, "path": path, "users": names}, c, auth, timeout)
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
 		default:
 			fmt.Println("command not recognized")
 		}

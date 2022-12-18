@@ -19,18 +19,6 @@ func getParam(params map[string]interface{}, name string) (interface{}, error) {
 	return paramInterface, nil
 }
 
-func getString(params map[string]interface{}, name string) (string, error) {
-	paramInterface, ok := params[name]
-	if !ok {
-		return "", ErrParamNotFound
-	}
-	val, ok := paramInterface.(string)
-	if !ok {
-		return "", ErrInvalidReturnParams
-	}
-	return val, nil
-}
-
 func getSliceOfStrings(params map[string]interface{}, name string) ([]string, error) {
 	paramInterface, ok := params[name]
 	if !ok {
@@ -73,4 +61,16 @@ func getSlice(params map[string]interface{}, name string) ([]interface{}, error)
 		return nil, ErrInvalidReturnParams
 	}
 	return sliceOfInterfaces, nil
+}
+
+func getMapStringInterface(params map[string]interface{}, name string) (map[string]interface{}, error) {
+	paramInterface, ok := params[name]
+	if !ok {
+		return nil, ErrParamNotFound
+	}
+	mapOfInterfaces, ok := paramInterface.(map[string]interface{})
+	if !ok {
+		return nil, ErrInvalidReturnParams
+	}
+	return mapOfInterfaces, nil
 }
