@@ -604,7 +604,7 @@ func StartCLI(host string, port int, username, password, certFile, keyFile strin
 			}
 			logLevel := args[3]
 			logPath := args[4]
-			_, err = Command("settimeoutinterval", map[string]interface{}{"verbose": verbose, "logToFile": logToFile, "logJSON": logJSON, "logLevel": logLevel, "logPath": logPath}, c, auth, timeout)
+			_, err = Command("setloggingsettings", map[string]interface{}{"verbose": verbose, "logToFile": logToFile, "logJSON": logJSON, "logLevel": logLevel, "logPath": logPath}, c, auth, timeout)
 			if err != nil {
 				fmt.Println(err.Error())
 				continue
